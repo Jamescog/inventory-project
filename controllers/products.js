@@ -66,8 +66,13 @@ exports.deleteProduct = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).send("Invalid ID");
     }
-    const deletedProduct = await Product.findByIdAndDelete(req.params.id);
-    res.status(204).json(deletedProduct);
+    const product = await Product.findById(req.params.id);
+    if (product) {
+      const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+      res.status(204).json(deletedProduct);
+    } else {
+      res.status(404).send("Product with specified id not found");
+    }
   } catch (err) {
     next(err.message);
   }
