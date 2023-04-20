@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const User = require("../models/users");
 
@@ -10,12 +11,9 @@ exports.createNewUser = async (req, res, next) => {
       password,
       email,
     });
-    await newUser.save();
+    const user = await newUser.save();
 
-    res.status(201).json({
-      name,
-      email,
-    });
+    res.status(201).json(user);
 
     next();
   } catch (error) {
@@ -26,7 +24,7 @@ exports.createNewUser = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    if (!email || password) {
+    if (!email || !password) {
       return res.status(400).send("Missing email or password");
     }
 
@@ -53,8 +51,10 @@ exports.login = async (req, res, next) => {
 exports.getUser = async (req, res, next) => {
   try {
     const id = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send("Invalid user ID");
+    }
     const user = await User.findById(id).select("-password");
-    console.log(user.name);
     if (user) {
       res.status(200).json(user);
       next();
