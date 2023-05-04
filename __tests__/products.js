@@ -29,8 +29,8 @@ describe("Test /api/products", () => {
 
   test("update a product", async () => {
     const response = await request(app).post("/api/products").send(product);
-    const p = response.body;
-
+    const p = response.body.newProduct;
+    console.log(p);
     await request(app)
       .put(`/api/products/${p.id}`)
       .send({ name: "updated name" })
@@ -41,7 +41,7 @@ describe("Test /api/products", () => {
 
   test("delete a product", async () => {
     const response = await request(app).post("/api/products").send(product);
-    const p = response.body;
+    const p = response.body.newProduct;
 
     await request(app).delete(`/api/products/${p.id}`).expect(204);
   });

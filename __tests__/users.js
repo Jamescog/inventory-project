@@ -28,15 +28,20 @@ describe("Test /api/users", () => {
 
     test("gets a user id", () =>
       request(app)
-        .get(`/api/users/${user.id}`)
+        .get(`/api/users/${user.user.id}`)
         .expect(200)
         .expect("Content-Type", /json/)
         .expect(/John Doe/));
 
     test("Password not included when user returned", async () => {
-      const u = await request(app).get(`/api/users/${user.id}`);
-      expect(u.body.name).toBe("John Doe");
-      expect(u.body.password).toBe(undefined);
+      const u = await request(app).get(`/api/users/${user.user.id}`);
+      expect(u.status).toBe(200);
+      expect(u.body.user).toEqual({
+        name: "John Doe",
+        email: "john46@gmail.com",
+        id: expect.any(String),
+      });
+      expect(u.body.password).toBeUndefined();
     });
   });
 });
