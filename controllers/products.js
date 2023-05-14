@@ -1,161 +1,211 @@
 const Product = require("../models/products");
 const mongoose = require("mongoose");
 const paginate = require("mongoose-paginate-v2");
+const { query } = require("express");
 
 exports.createNewProduct = async (req, res, next) => {
-  try {
-    const expectedFields = [
-      "name",
-      "description",
-      "unitPrice",
-      "stock",
-      "category",
-      "images",
-    ];
+  const expectedFields = [
+    "name",
+    "description",
+    "unitPrice",
+    "stock",
+    "category",
+    "images",
+  ];
 
-    let missingFields = [];
+  let missingFields = [];
 
-    expectedFields.forEach((field) => {
-      if (!req.body.hasOwnProperty(field)) {
-        missingFields.push(field);
-      }
-    });
-
-    if (missingFields.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: `Missing fields: ${missingFields.join(", ")}`,
-      });
+  expectedFields.forEach((field) => {
+    if (!req.body.hasOwnProperty(field)) {
+      missingFields.push(field);
     }
+  });
 
-    const product = new Product(req.body);
-    const newProduct = await product.save();
-    console.log(newProduct);
-    return res.status(201).json({
-      success: true,
-      newProduct,
-    });
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+  if (missingFields.length > 0) {
+    const error = new Error(`Missing fields: ${missingFields.join(", ")}`);
+    error.status = 400;
+    error.type = "custom";
+    throw error;
   }
+  req.body.addedBy = req.user.id;
+  const product = new Product(req.body);
+  const newProduct = await product.save();
+  return res.status(201).json({
+    success: true,
+    newProduct,
+  });
 };
 
 exports.getOneProduct = async (req, res, next) => {
-  try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({
-        success: false,
-        message: `Invalid Product ID: ${req.params.id}`,
-      });
-    }
-    const product = await Product.findById(req.params.id);
-    if (product) {
-      return res.status(200).json({ success: true, product });
-    } else {
-      return res.status(404).json({
-        success: false,
-        message: `Product with id ${req.params.id} Not Found`,
-      });
-    }
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    const error = new Error(`Invalid Product ID: ${req.params.id}`);
+    error.status = 400;
+    error.type = "custom";
+    throw error;
+  }
+  const product = await Product.findById(req.params.id);
+  if (product) {
+    return res.status(200).json({ success: true, product });
+  } else {
+    const error = new Error(`Product with id ${req.params.id} Not Found`);
+    error.status = 404;
+    error.type = "custom";
+    throw error;
   }
 };
 
 exports.getAllProducts = async (req, res, next) => {
-  try {
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 8;
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 8;
 
-    const all_products = await Product.paginate({}, { page, limit });
-    return res.status(200).json({ success: true, all_products });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
-  }
+  const all_products = await Product.paginate({}, { page, limit });
+  return res.status(200).json({ success: true, all_products });
 };
 
 exports.updateProduct = async (req, res, next) => {
-  try {
-    console.log(req.params);
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({
-        success: false,
-        message: `Invalid Product ID: ${req.params.id}`,
-      });
-    }
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    const error = new Error(`Invalid Product ID: ${req.params.id}`);
+    error.status = 400;
+    error.type = "custom";
+    throw error;
+  }
+
+  const product = await Product.findById(req.params.id);
+  if (!product) {
+    const error = new Error(`Product with id ${req.params.id} Not Found`);
+    error.status = 404;
+    error.type = "custom";
+    throw error;
+  }
+
+  if (String(product.addedBy) !== req.user.id) {
+    const err = Error("Your are not the owner of this product");
+    err.status = 401;
+    err.type = "custom";
+    throw err;
+  } else {
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true }
     );
-
     return res.status(200).json({ success: true, updatedProduct });
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: err.message,
-    });
   }
 };
 
 exports.deleteProduct = async (req, res, next) => {
-  try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({
-        success: false,
-        message: `Invalid Product ID: ${req.params.id}`,
-      });
-    }
-    const product = await Product.findById(req.params.id);
-    if (product) {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    const error = new Error(`Invalid Product ID: ${req.params.id}`);
+    error.status = 400;
+    error.type = "custom";
+    throw error;
+  }
+  const product = await Product.findById(req.params.id);
+  console.log(req.user.email);
+  if (product) {
+    if (String(product.addedBy) !== req.user.id) {
+      const err = Error("Your are not the owner of this product");
+      err.status = 401;
+      err.type = "custom";
+      throw err;
+    } else {
       const deletedProduct = await Product.findByIdAndDelete(req.params.id);
       res.status(204).json({ success: true, deletedProduct });
-    } else {
-      return res.status(404).send({
-        success: false,
-        message: `Product with id ${req.params.id} Not Fund `,
-      });
     }
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+  } else {
+    const error = new Error(`Product with id ${req.params.id} Not Found`);
+    error.status = 404;
+    error.type = "custom";
+    throw error;
   }
 };
 
 exports.filterProduct = async (req, res, next) => {
-  try {
-    const { category, minPrice, maxPrice } = req.query;
-    const page = Number(req.query) || 1;
-    const limit = Number(req.query) || 5;
-    const filter = {};
-    if (category) {
-      filter.category = category;
-    }
-    if (minPrice && maxPrice) {
-      filter.unitPrice = { $gte: parseInt(minPrice), $lte: parseInt(maxPrice) };
-    } else if (minPrice) {
-      filter.unitPrice = { $gte: parseInt(minPrice) };
-    } else if (maxPrice) {
-      filter.unitPrice = { $lte: parseInt(maxPrice) };
-    }
-
-    result = await Product.paginate(filter, { page, limit });
-    return res.status(200).json({
-      success: true,
-      result,
-    });
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+  const { category, minPrice, maxPrice } = req.query;
+  const page = Number(req.query) || 1;
+  const limit = Number(req.query) || 5;
+  const filter = {};
+  if (category) {
+    filter.category = category;
   }
+  if (minPrice && maxPrice) {
+    filter.unitPrice = { $gte: parseInt(minPrice), $lte: parseInt(maxPrice) };
+  } else if (minPrice) {
+    filter.unitPrice = { $gte: parseInt(minPrice) };
+  } else if (maxPrice) {
+    filter.unitPrice = { $lte: parseInt(maxPrice) };
+  }
+
+  result = await Product.paginate(filter, { page, limit });
+  return res.status(200).json({
+    success: true,
+    result,
+  });
+};
+
+exports.searchProducts = async (req, res) => {
+  const query = req.query.q;
+  const searchFeild = ["name", "description"];
+  const page = Number(req.query) || 1;
+  const limit = Number(req.query) || 5;
+
+  const searchQuery = { $or: [] };
+  searchFeild.forEach((f) => {
+    searchQuery.$or.push({ [f]: { $regex: query, $options: "i" } });
+  });
+  const select = { name: 1, _id: 1, unitPrice: 1, category: 1 };
+  const result = await Product.paginate(searchQuery, { page, limit, select });
+  res.status(200).json({ success: true, result });
+};
+
+exports.stockReports = async (req, res) => {
+  const products = await Product.find(
+    { stock: { $lt: process.env.CRITICAL_STOCK_VALUE } },
+    { name: 1, category: 1, stock: 1, unitPrice: 1 }
+  ).sort({ stock: 1 });
+  res.json({ products });
+};
+
+exports.sellProduct = async (req, res) => {
+  const quantity = parseInt(req.query.quantity) || 1;
+
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    const error = new Error(`Invalid Product ID: ${req.params.id}`);
+    error.status = 400;
+    error.type = "custom";
+    throw error;
+  }
+
+  const product = await Product.findById(req.params.id);
+  if (!product) {
+    const err = Error(`Product with id ${req.params.id} is not Found`);
+    err.status = 404;
+    err.type = "custom";
+    throw err;
+  }
+
+  if (String(product.addedBy) !== req.user.id) {
+    const err = Error(`You're not the owner of the product`);
+    err.status = 401;
+    err.type = "custom";
+    throw err;
+  }
+
+  const stock = product.stock - quantity;
+  if (stock < 0) {
+    const err = Error(
+      `Insuffcient product in stock: Stock(${product.stock}) is less than ${quantity}`
+    );
+    err.status = 400;
+    err.type = "custom";
+    throw err;
+  }
+  const stockNow = await Product.findByIdAndUpdate(req.params.id, { stock });
+
+  res.status(200).json({
+    success: true,
+    prevStock: product.stock,
+    nowStock: stock,
+    stockNow,
+  });
 };

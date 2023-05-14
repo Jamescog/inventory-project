@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>HTTP Client</title>
+    <!-- Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Popper JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  </head>
+  <body>
+    <div class="container mt-4" style="width: 40%">
+      <h1>HTTP Client</h1>
+      <form id="http-client">
+        <div class="form-group">
+          <label for="http-verb">HTTP Verb:</label>
+          <input
+            type="text"
+            class="form-control"
+            id="http-verb"
+            name="http-verb"
+            placeholder="Enter HTTP verb (e.g. GET)"
+          />
+        </div>
+        <div class="form-group">
+          <label for="http-url">URL:</label>
+          <input
+            type="text"
+            class="form-control"
+            id="http-url"
+            name="http-url"
+            placeholder="Enter URL"
+          />
+        </div>
+        <div class="form-group">
+          <label for="http-headers">Headers:</label>
+          <textarea
+            class="form-control"
+            id="http-headers"
+            name="http-headers"
+            rows="3"
+            placeholder="Enter headers"
+          ></textarea>
+        </div>
+        <div class="form-group">
+          <label for="http-body">Body:</label>
+          <textarea
+            class="form-control"
+            id="http-body"
+            name="http-body"
+            rows="6"
+            placeholder="Enter request body"
+          ></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Send Request</button>
+      </form>
+      <div id="response"></div>
+    </div>
+    <script>
+      $(document).ready(() => {
+        $("#http-client").submit((event) => {
+          event.preventDefault();
+          const httpVerb = $("#http-verb").val();
+          const httpUrl = $("#http-url").val();
+          const httpHeaders = $("#http-headers").val();
+          const httpBody = $("#http-body").val();
+          $.ajax({
+            method: httpVerb,
+            url: httpUrl,
+            headers: JSON.parse(httpHeaders),
+            data: httpBody,
+            success: (response) => {
+              $("#response").html(
+                "<pre>" + JSON.stringify(response, null, 2) + "</pre>"
+              );
+            },
+            error: (xhr, status, error) => {
+              $("#response").html("<pre>" + error + "</pre>");
+            },
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
