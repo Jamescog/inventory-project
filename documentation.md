@@ -21,13 +21,16 @@ This endpoint allows you to create a new user account.
 #### Request
    - Method: POST
    - Headers:
-        -Content-Type: application/json
+       -Content-Type: application/json
+    
+    ```
     {
-  "name": string,
-  "email": string,
-  "password": string
-}
-```
+        "name": string,
+        "email": string,
+        "password": string
+    }
+
+    ```
 - `name`: The name of the user. Required.
 - `email`: The Email of the user. Required.
 - `password`: The password for the user's account. Required >=8 chars.
