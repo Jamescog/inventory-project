@@ -18,6 +18,21 @@ This section describes the available endpoints and their parameters.
 
 This endpoint allows you to create a new user account.
 
+#### Request
+   - Method: POST
+   - Headers:
+        -Content-Type: application/json
+    {
+  "name": string,
+  "email": string,
+  "password": string
+}
+```
+- `name`: The name of the user. Required.
+- `email`: The Email of the user. Required.
+- `password`: The password for the user's account. Required >=8 chars.
+
+
 ### `/api/orders`
 
 This endpoint allows you to retrieve a list of orders.
