@@ -21,3 +21,13 @@ This section explains how to authenticate with the API and obtain an access toke
 ## Error Handling
 
 This section describes the error responses returned by the API.
+
+
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Endpoints](#endpoints)
+  - [`/api/users`](#apiusers)
+  - [`/api/orders`](#apiorders)
+- [Authentication](#authentication)
+- [Error Handling](#error-handling)
