@@ -6,12 +6,6 @@ const errorHandler = require("./middlewares/errorHandler");
 const connectDB = require("./config/db");
 const { error404 } = require("./middlewares/error404");
 
-// Load the environment variables
-dotenv.config({ path: "./config/.env" });
-
-//Connect to DB
-connectDB();
-
 // Import the router
 const mainRouter = require("./routes/mainRouter");
 

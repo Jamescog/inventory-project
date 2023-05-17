@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
 const User = require("../models/users");
+const Product = require("../models/products");
 const expiredToken = require("../models/blacklistedtoken");
 const { confrimEmail } = require("../utils/emailServices");
 const { hashChangedPassword } = require("../middlewares/hashPassword");
@@ -24,8 +25,7 @@ exports.createNewUser = async (req, res) => {
 
   res.status(201).json({
     success: true,
-    message:
-      "The verification email is sent to your account, please confrim your accouont",
+    user,
   });
 };
 
@@ -85,10 +85,10 @@ exports.getUser = async (req, res, next) => {
     throw error;
   }
 
-  const user = await User.findById(id).select("-password").populate("products");
-
+  const user = await User.findById(id).select("-password");
+  const product = await Product.find({ addedBy: req.params.id }).lean();
   if (user) {
-    console.log(user);
+    user.products = product;
     return res.status(200).json({ success: true, user });
   } else {
     const error = new Error("User Not Found");

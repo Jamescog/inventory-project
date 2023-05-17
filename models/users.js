@@ -19,7 +19,7 @@ const userSchema = mongoose.Schema({
     required: true,
     minlength: 8,
   },
-  products: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
+  products: [{ type: mongoose.Schema.ObjectId, ref: "Product" }],
 });
 
 userSchema.set();

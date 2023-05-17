@@ -1,9 +1,15 @@
 const nodemailer = require("nodemailer");
+const { login } = require("../controllers/users");
+const dotenv = require("dotenv");
+
+dotenv.config({ path: "./config/.env" });
+
 const sender = process.env.EMAIL_NAME;
 const password = process.env.EMAIL_PASSWORD;
 exports.confrimEmail = async (name, recieverEmail) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
+    secure: false,
     auth: {
       user: sender,
       pass: password,
@@ -11,6 +17,7 @@ exports.confrimEmail = async (name, recieverEmail) => {
     host: "smtp.gmail.com",
   });
 
+  console.log(transporter);
   const mailOptions = {
     from: sender,
     to: recieverEmail,
@@ -28,6 +35,7 @@ exports.confrimEmail = async (name, recieverEmail) => {
     if (error) {
       console.log(error);
     } else {
+      console.log(sender, password);
       console.log(`Emial Sent`);
     }
   });

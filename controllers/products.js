@@ -1,4 +1,5 @@
 const Product = require("../models/products");
+const Review = require("../models/review");
 const mongoose = require("mongoose");
 const paginate = require("mongoose-paginate-v2");
 const { query } = require("express");
@@ -43,8 +44,14 @@ exports.getOneProduct = async (req, res, next) => {
     error.type = "custom";
     throw error;
   }
-  const product = await Product.findById(req.params.id);
+  const product = await Product.findById(req.params.id).populate({
+    path: "addedBy",
+    select: "id name",
+  });
   if (product) {
+    product.reviews = await Review.find({ product: req.params.id }).select(
+      "body rating"
+    );
     return res.status(200).json({ success: true, product });
   } else {
     const error = new Error(`Product with id ${req.params.id} Not Found`);

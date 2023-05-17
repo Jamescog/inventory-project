@@ -1,5 +1,4 @@
 const handleError = (err, req, res, next) => {
-  console.log(err);
   if (err.name === "ValidationError") {
     const path = Object.keys(err.errors)[0];
     const kind = err.errors[path].kind;
@@ -14,18 +13,29 @@ const handleError = (err, req, res, next) => {
         success: false,
         message: `${err.name}: The minimum length error for ${path}`,
       });
+    } else if (kind === "maxlenth") {
+      res.status(400).json({
+        success: false,
+        message: `The maximum allowed length error for ${path}`,
+      });
+    } else if (kind === "regexp") {
+      const field = Object.keys(err.errors);
+      res.status(400).json({
+        success: false,
+        message: `Invalid value for ${field}: ${err.errors[field].value} `,
+      });
     }
   } else if (err.code === 11000) {
     console.log(err.name);
     const keyValue = Object.keys(err.keyValue)[0];
-    res.status(400).json({
+    res.status(409).json({
       success: false,
       message: `Duplicate Key of ${keyValue}: ${err.keyValue[keyValue]} `,
     });
   } else if (err.name === "CastError") {
     res.status(400).json({
       success: false,
-      message: "Invalid value provided for one or more fields",
+      message: "Invalid resource id",
     });
   } else if (err.message.includes("not found")) {
     res.status(404).json({
